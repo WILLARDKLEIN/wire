@@ -71,6 +71,15 @@ Columns left of `inbound` are **match predicates**; columns from `inbound` right
 2. **Alarm-window degrades one notch, never hard-denies.** During a T21 alarm, legitimate org-mates stay reachable at higher friction rather than going dark mid-incident (§3).
 3. **No `require_op_did` column.** RFC-001 v2 already establishes that a session with no `op_did` cannot reach `ORG_VERIFIED`; eased-pairing therefore implies `op_did` present. One fewer column.
 
+### 1.4 Scope boundary: the surface gates pairing + fan-out, never kind-delivery
+
+Two postures, deliberately opposite — conflating them is the most likely misread of this surface:
+
+- **Pairing posture — default-deny.** A peer with no matching org row falls to the immutable default row (`manual`); cross-tenant ⇒ bilateral SAS. Preserves the v0.5.14 phonebook-scrape closure.
+- **Kind-delivery posture — default-allow.** The surface does **not** sit in the inbound event-delivery path. Once a peer is paired at *any* tier, all semantic kinds (`claim` / `decision` / `ack` / `message`) and the protocol pairing kinds (`pair_drop` / `pair_drop_ack`) deliver unconditionally. The **only** deny mechanism over an already-paired peer is O1's per-peer block-list, and it is strictly opt-in (a deny-list, never a default).
+
+A deny-unknown default over event *kinds* would silently sever agent-to-agent collaboration — an agent keeps working while its reviewer's feedback never arrives. Live prior art (onyx-ridge, slancha-mesh, 2026-05-28): *"an autonomous multi-agent build loop shipped 10+ reviewed PRs over wire in one session on `claim`/`decision`/`ack`; deny-unknown filtering would have silently severed the review channel mid-build."* The filtering surface therefore gates **whether a new peer is eased-paired** (§1–§3) and **which paired peers a fan-out selects** (§2) — it is never a kind-level allow/deny gate.
+
 ---
 
 ## 2. The three canonical rules — all emergent, none special-cased
